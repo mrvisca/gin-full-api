@@ -121,6 +121,19 @@ func getOrRegisterUser(provider string, user *structs.User) models.User {
 	}
 }
 
+func ProfileUser(c *gin.Context) {
+	user_id := int(c.MustGet("jwt_user_id").(float64))
+	var user models.User
+
+	// Eager loading (mengakses data pada beberapa tabel yang memiliki relasi untuk ditampilakan bersamaan tanpa harus query 1 per satu)
+	item := config.DB.Where("id = ?", user_id).Preload("Articles", "user_id = ?", user_id).Find(&user) // Articles dari user struct Articles untuk penghubung ke struct Artichel
+
+	c.JSON(200, gin.H{
+		"status": "Sukses mengakses halaman profil",
+		"data":   item,
+	})
+}
+
 func createToken(user *models.User) string {
 	// Create a new token object, specifying signing method and the claims
 	// you would like it to contain.

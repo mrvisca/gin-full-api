@@ -25,6 +25,7 @@ func main() {
 
 		// Route testing token
 		v1.GET("/check", middleware.IsAuth(), routes.CheckToken)
+		v1.GET("/profile", middleware.IsAuth(), routes.ProfileUser)
 
 		v1.GET("/article/:slug", routes.GetArticle)
 		artikel := v1.Group("/artikel")
