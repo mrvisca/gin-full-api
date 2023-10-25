@@ -12,10 +12,14 @@ import (
 var JWT_SECRET = os.Getenv("JWT_SECRET")
 
 func IsAuth() gin.HandlerFunc {
-	return checkJWT()
+	return checkJWT(false)
 }
 
-func checkJWT() gin.HandlerFunc {
+func IsAdmin() gin.HandlerFunc {
+	return checkJWT(true)
+}
+
+func checkJWT(middlewareAdmin bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Token string di dapat dari header postman
 		authHeader := c.Request.Header.Get("Authorization")
@@ -39,8 +43,16 @@ func checkJWT() gin.HandlerFunc {
 
 			if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 				// fmt.Println(claims["user_id"], claims["user_role"])
+				userRole := bool(claims["user_role"].(bool))
 				c.Set("jwt_user_id", claims["user_id"]) // Menentukan key yang akan di oper
 				c.Set("jwt_isAdmin", claims["user_role"])
+
+				// Filter jika dia hanya sebatas user biasa maka dia hanya bisa mendapatkan response gagal
+				if middlewareAdmin == true && userRole == false {
+					c.JSON(403, gin.H{"success": false, "message": "Hanya admin yang punya akses ini"})
+					c.Abort()
+					return
+				}
 			} else {
 				c.JSON(422, gin.H{"msg": "Invalid Token", "error": err})
 				c.Abort()
